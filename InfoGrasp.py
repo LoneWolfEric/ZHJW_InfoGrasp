@@ -2,7 +2,6 @@ from selenium import webdriver
 from PIL import Image
 from bs4 import BeautifulSoup
 import time
-from bs4 import BeautifulSoup
 import re
 
 # 创建一个类用于存储学生信息
@@ -27,7 +26,7 @@ class Spider(object):
         chrome_options.add_argument('--no-sandbox')
         self.driver = webdriver.Chrome(options=chrome_options)
         self.student_info = StudentInfo()
-    
+        self.message = ''
 
     # 访问登陆页面，获取下载验证码
     def get_CAPTCHA(self):
@@ -65,8 +64,16 @@ class Spider(object):
         submit_bottom = self.driver.find_element_by_id('loginButton')
         submit_bottom.click()
         time.sleep(1)
+
+        if self.driver.current_url == 'http://zhjw.scu.edu.cn/index.jsp':
+            self.message = '成功登陆'
+        elif self.driver.current_url == 'http://zhjw.scu.edu.cn/login?errorCode=badCaptcha':
+            self.message = '验证码错误！'
+        else:
+            self.message = '用户名或密码错误！'
+        
+
         self.driver.save_screenshot('login.png')
-        pass
 
     # 进入登陆页面，获取个人信息
     def get_personl_info(self):
@@ -82,8 +89,6 @@ class Spider(object):
         # print(self.driver.page_source)
         self.info_process(self.driver.page_source)
         # print(student_info_list)
-
-
         # print(self.driver.page_source)
         
 
@@ -95,8 +100,9 @@ class Spider(object):
     def run(self):
         self.get_CAPTCHA()
         self.login()
-        self.get_personl_info()
-        self.logout()
+        if self.message == '成功登陆':
+            self.get_personl_info()
+            self.logout()
 
     def info_process(self, html):
         soup = BeautifulSoup(html)
@@ -122,6 +128,7 @@ class Spider(object):
 
 spider = Spider()
 spider.run()
+print(spider.message)
 print(spider.student_info.student_id)
 print(spider.student_info.name)
 print(spider.student_info.major)
@@ -132,41 +139,3 @@ print(spider.student_info.gender)
 print(spider.student_info.native_place)
 print(spider.student_info.email)
 print(spider.student_info.phone)
-# string = str(open('prsonalinfo.html').read())
-# # print(string)
-# string = string.strip('\n\r')
-# print(string)
-# # student_id = re.match(r'学号</div>\s<div class="profile-info-value" style="width:34%">\s\d{13}', string)
-# # pattern = '学号</div>\s<div class="profile-info-value" style="width:34%">\s\d{13}'
-# student_id = re.findall(r'/<div class="profile-info-name">学号</div>(.*?)<div class="profile-info-value" style="width:34%">(.*?)\d{13}(.*?)</div>/', string, re.S)
-# print(student_id)
-
-
-# html = str(open('prsonalinfo.html').read())
-# soup = BeautifulSoup(html)
-# info = soup.find_all('div', class_='profile-info-value')
-# # print(len(info))
-# usrful_info = info[2:74]
-# print(str(usrful_info[0]))
-
-# res = re.findall(r'>(.*?)<',str(usrful_info[0]),re.DOTALL)
-# res = str(res[0]).strip()
-# print(res)
-
-
-
-# def info_process():
-#     html = str(open('prsonalinfo.html').read())
-#     soup = BeautifulSoup(html)
-#     info = soup.find_all('div', class_='profile-info-value')
-#     usrful_info = info[2:74]
-#     for i in range(len(usrful_info)):
-#         res = re.findall(r'>(.*?)<',str(usrful_info[i]),re.DOTALL)
-#         res = str(res[0]).strip()
-
-#         usrful_info[i] = res
-
-#     print(usrful_info)
-#     return(usrful_info)
-
-# info_process()
