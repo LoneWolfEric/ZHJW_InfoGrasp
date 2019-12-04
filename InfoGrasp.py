@@ -1,9 +1,9 @@
 from selenium import webdriver
 from PIL import Image
 from bs4 import BeautifulSoup
-import hashlib
 import time
-
+from bs4 import BeautifulSoup
+import re
 
 # 创建一个类用于存储学生信息
 class StudentInfo(object):
@@ -26,6 +26,8 @@ class Spider(object):
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--no-sandbox')
         self.driver = webdriver.Chrome(options=chrome_options)
+        self.student_info = StudentInfo()
+    
 
     # 访问登陆页面，获取下载验证码
     def get_CAPTCHA(self):
@@ -70,26 +72,20 @@ class Spider(object):
     def get_personl_info(self):
         # 进入个人信息界面
         # menu-text = self.driver.find_element_by_id('1181690')
-        time.sleep(3)
+        time.sleep(1)
+        # print('into info page')
         self.driver.get('http://zhjw.scu.edu.cn/student/rollManagement/rollInfo/index')
-        self.driver.save_screenshot('personalinfo.png')
+        # self.driver.save_screenshot('personalinfo.png')
 
-        with open('prsonalinfo.html', 'wb') as f:
-            f.write(self.driver.page_source.encode('utf-8'))
+        # with open('prsonalinfo.html', 'wb') as f:
+        #     f.write(self.driver.page_source.encode('utf-8'))
+        # print(self.driver.page_source)
+        self.info_process(self.driver.page_source)
+        # print(student_info_list)
+
 
         # print(self.driver.page_source)
-        student = StudentInfo()
-
-        student.name = ''
-        student.student_id = ''
-        student.major = ''
-        student.college = ''
-        student.degree = ''
-        student.grade = ''
-        student.gender = ''
-        student.native_place = ''
-        student.email = ''
-        student.phone = ''
+        
 
     # 断开连接
     def logout(self):
@@ -102,9 +98,75 @@ class Spider(object):
         self.get_personl_info()
         self.logout()
 
+    def info_process(self, html):
+        soup = BeautifulSoup(html)
+        info = soup.find_all('div', class_='profile-info-value')
+        usrful_info = info[2:74]
+        for i in range(len(usrful_info)):
+            res = re.findall(r'>(.*?)<',str(usrful_info[i]),re.DOTALL)
+            res = str(res[0]).strip()
+            usrful_info[i] = res
+
+        self.student_info.name = usrful_info[16]
+        self.student_info.student_id = usrful_info[15]
+        self.student_info.major = usrful_info[23]
+        self.student_info.college = usrful_info[22]
+        self.student_info.degree = usrful_info[31]
+        self.student_info.grade = usrful_info[21]
+        self.student_info.gender = usrful_info[49]
+        self.student_info.native_place = usrful_info[55]
+        self.student_info.email = usrful_info[0]
+        self.student_info.phone = usrful_info[5]
+        
+
 
 spider = Spider()
 spider.run()
+print(spider.student_info.student_id)
+print(spider.student_info.name)
+print(spider.student_info.major)
+print(spider.student_info.college)
+print(spider.student_info.degree)
+print(spider.student_info.grade)
+print(spider.student_info.gender)
+print(spider.student_info.native_place)
+print(spider.student_info.email)
+print(spider.student_info.phone)
+# string = str(open('prsonalinfo.html').read())
+# # print(string)
+# string = string.strip('\n\r')
+# print(string)
+# # student_id = re.match(r'学号</div>\s<div class="profile-info-value" style="width:34%">\s\d{13}', string)
+# # pattern = '学号</div>\s<div class="profile-info-value" style="width:34%">\s\d{13}'
+# student_id = re.findall(r'/<div class="profile-info-name">学号</div>(.*?)<div class="profile-info-value" style="width:34%">(.*?)\d{13}(.*?)</div>/', string, re.S)
+# print(student_id)
+
+
+# html = str(open('prsonalinfo.html').read())
+# soup = BeautifulSoup(html)
+# info = soup.find_all('div', class_='profile-info-value')
+# # print(len(info))
+# usrful_info = info[2:74]
+# print(str(usrful_info[0]))
+
+# res = re.findall(r'>(.*?)<',str(usrful_info[0]),re.DOTALL)
+# res = str(res[0]).strip()
+# print(res)
 
 
 
+# def info_process():
+#     html = str(open('prsonalinfo.html').read())
+#     soup = BeautifulSoup(html)
+#     info = soup.find_all('div', class_='profile-info-value')
+#     usrful_info = info[2:74]
+#     for i in range(len(usrful_info)):
+#         res = re.findall(r'>(.*?)<',str(usrful_info[i]),re.DOTALL)
+#         res = str(res[0]).strip()
+
+#         usrful_info[i] = res
+
+#     print(usrful_info)
+#     return(usrful_info)
+
+# info_process()
