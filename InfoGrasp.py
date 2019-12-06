@@ -19,7 +19,7 @@ class StudentInfo(object):
 
 class Spider(object):
 
-    def __init__(self):
+    def __init__(self, studentid, password):
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--disable-gpu')
@@ -27,6 +27,9 @@ class Spider(object):
         self.driver = webdriver.Chrome(options=chrome_options)
         self.student_info = StudentInfo()
         self.message = ''
+        self.student_id = studentid
+        self.password = password
+
 
     # 访问登陆页面，获取下载验证码
     def get_CAPTCHA(self):
@@ -55,8 +58,8 @@ class Spider(object):
         password_box = self.driver.find_element_by_id('input_password')
         captch_box = self.driver.find_element_by_id('input_checkcode')
 
-        username_box.send_keys('2016141442100')
-        password_box.send_keys('lyx-19980708')
+        username_box.send_keys(self.student_id)
+        password_box.send_keys(self.password)
         captch = str(input('captch?'))
         captch_box.send_keys(captch)
         self.driver.save_screenshot('filltheform.png')
@@ -126,7 +129,7 @@ class Spider(object):
         
 
 
-spider = Spider()
+spider = Spider('2016141442100', 'lyx-19980708')
 spider.run()
 print(spider.message)
 print(spider.student_info.student_id)
