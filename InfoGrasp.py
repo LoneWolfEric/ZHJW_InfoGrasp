@@ -19,7 +19,7 @@ class StudentInfo(object):
 
 class Spider(object):
 
-    def __init__(self, studentid, password):
+    def __init__(self):
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--disable-gpu')
@@ -27,8 +27,6 @@ class Spider(object):
         self.driver = webdriver.Chrome(options=chrome_options)
         self.student_info = StudentInfo()
         self.message = ''
-        self.student_id = studentid
-        self.password = password
 
 
     # 访问登陆页面，获取下载验证码
@@ -50,17 +48,16 @@ class Spider(object):
         img=Image.open('screenshot.png')
         img = img.crop((left,top,right,bottom))
         img.save('captch.png')
-        # print(self.driver.page_source) 
 
     # 输入学号密码验证码，登陆
-    def login(self):
+    def login(self, student_id, password, captch):
         username_box = self.driver.find_element_by_id('input_username')
         password_box = self.driver.find_element_by_id('input_password')
         captch_box = self.driver.find_element_by_id('input_checkcode')
 
-        username_box.send_keys(self.student_id)
-        password_box.send_keys(self.password)
-        captch = str(input('captch?'))
+        username_box.send_keys(student_id)
+        password_box.send_keys(password)
+        # captch = str(input('captch?'))
         captch_box.send_keys(captch)
         self.driver.save_screenshot('filltheform.png')
 
@@ -79,36 +76,10 @@ class Spider(object):
         self.driver.save_screenshot('login.png')
 
     # 进入登陆页面，获取个人信息
-    def get_personl_info(self):
-        # 进入个人信息界面
-        # menu-text = self.driver.find_element_by_id('1181690')
-        time.sleep(1)
-        # print('into info page')
+    def personl_info_process(self):
         self.driver.get('http://zhjw.scu.edu.cn/student/rollManagement/rollInfo/index')
-        # self.driver.save_screenshot('personalinfo.png')
-
-        # with open('prsonalinfo.html', 'wb') as f:
-        #     f.write(self.driver.page_source.encode('utf-8'))
-        # print(self.driver.page_source)
-        self.info_process(self.driver.page_source)
-        # print(student_info_list)
-        # print(self.driver.page_source)
-        
-
-    # 断开连接
-    def logout(self):
-        self.driver.delete_all_cookies()
-        self.driver.quit()
-
-    def run(self):
-        self.get_CAPTCHA()
-        self.login()
-        if self.message == '成功登陆':
-            self.get_personl_info()
-            self.logout()
-
-    def info_process(self, html):
-        soup = BeautifulSoup(html)
+        html = self.driver.page_source
+        soup = BeautifulSoup(html,features='html.parser')
         info = soup.find_all('div', class_='profile-info-value')
         usrful_info = info[2:74]
         for i in range(len(usrful_info)):
@@ -126,11 +97,26 @@ class Spider(object):
         self.student_info.native_place = usrful_info[55]
         self.student_info.email = usrful_info[0]
         self.student_info.phone = usrful_info[5]
+
+    # 断开连接
+    def logout(self):
+        self.driver.delete_all_cookies()
+        self.driver.quit()
+
+    def get_personal_info(self, student_id, password, captch):
+        self.login(student_id, password, captch)
+        if self.message == '成功登陆':
+            self.personl_info_process()
+            self.logout()
+
         
 
 
-spider = Spider('2016141442100', 'lyx-19980708')
-spider.run()
+spider = Spider()
+spider.get_CAPTCHA()
+captch = str(input('captch?'))
+spider.get_personal_info('2016141442100', 'lyx-19980708', captch)
+
 print(spider.message)
 print(spider.student_info.student_id)
 print(spider.student_info.name)
